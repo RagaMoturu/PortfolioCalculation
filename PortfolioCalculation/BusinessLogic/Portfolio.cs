@@ -13,6 +13,7 @@ namespace PortfolioCalculation.BusinessLogic
         public IEnumerable<Quote> Quotes { get; set; }
 
         private Dictionary<string, decimal> sharePrices;
+        private Dictionary<string, decimal> fundValues = new Dictionary<string, decimal>();
 
         public decimal GetPortfolioValue(DateTime date, string investorId)
         {
@@ -59,11 +60,19 @@ namespace PortfolioCalculation.BusinessLogic
                         InvestmentId = investment.InvestmentId
                     };
                 case "Fonds":
+                    decimal fundValue;
+
                     // Calculate fund value based on FondsInvestor as Investor
-                    var fundValue = Investments
-                                    .Where(i => i.InvestorId == investment.FondsInvestor)
-                                    .Select(i => GetInvestmentProducts(date, transactions, i)) 
-                                    .Sum(i => i.CalculateValue(date, transactions)); 
+                    if (!fundValues.ContainsKey(investment.FondsInvestor))
+                    {
+                        fundValue = Investments
+                                        .Where(i => i.InvestorId == investment.FondsInvestor)
+                                        .Select(i => GetInvestmentProducts(date, transactions, i))
+                                        .Sum(i => i.CalculateValue(date, transactions));
+                        fundValues.Add(investment.FondsInvestor, fundValue);
+                    }
+                    else
+                        fundValue = fundValues[investment.FondsInvestor];
 
                     return new Fund()
                     {
